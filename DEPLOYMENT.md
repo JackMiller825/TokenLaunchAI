@@ -33,6 +33,12 @@ npm run worker
 
 `npm run start` listens on port 43123. Put TLS in front of it, or set the platform port and update `APP_URL`.
 
+## GitHub Pages
+
+The repository remote for public source is `https://github.com/JackMiller825/TokenLaunchAI.git`. Every update should be pushed there. `npm run build:pages` writes the static interface to `docs/`. GitHub Pages serves that folder from `main` at `https://jackmiller825.github.io/TokenLaunchAI/`.
+
+The site uses the `/TokenLaunchAI` base path. It does not crawl websites or store projects. Pages is configured with branch `main` and folder `/docs`, because the current GitHub login can push the site but cannot push Actions workflow files. `.github/workflows/pages.yml` is ready for when the token includes the `workflow` scope.
+
 ## Vercel
 
 The App Router project is compatible with a Vercel Node deployment for the web process. Set the environment variables in the project settings. Vercel will not keep the BullMQ worker alive, so run `npm run worker` on a small always-on Node service that can reach the same Postgres and Redis.

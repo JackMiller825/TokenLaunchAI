@@ -31,6 +31,7 @@ export const FACT_STATUS: Record<string, string> = {
 export function useBootstrap() {
   return useQuery({
     queryKey: ["bootstrap"],
+    enabled: process.env.NEXT_PUBLIC_STATIC_HOST !== "1",
     queryFn: async () => {
       const response = await fetch("/api/bootstrap");
       const body = await response.json();
@@ -255,6 +256,20 @@ export function EmptyProject() {
 
 export function Gate({ children }: { children: (payload: ProjectPayload, projectId: string) => React.ReactNode }) {
   const query = useProject();
+  if (process.env.NEXT_PUBLIC_STATIC_HOST === "1") {
+    return (
+      <div className="panel p-8">
+        <h2 className="text-2xl text-white">This desk runs on the Node server</h2>
+        <p className="mt-2 max-w-xl text-muted">
+          GitHub Pages published the interface. Website research, saved projects, Telegram, and approvals need the Node app with Postgres
+          and Redis. On your machine, run <span className="text-white">npm run dev</span> and open port 43123.
+        </p>
+        <Link href="/" className="btn btn-primary mt-5">
+          Back to the launch form
+        </Link>
+      </div>
+    );
+  }
   if (query.boot.isLoading || query.isLoading) return <p className="text-muted">Loading the project desk…</p>;
   if (query.boot.isError) return <p className="text-danger">The desk could not load. Refresh and try again.</p>;
   if (!query.projectId || !query.data?.project) return <EmptyProject />;

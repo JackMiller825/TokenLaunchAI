@@ -44,6 +44,10 @@ export function HomeClient() {
   });
 
   async function onSubmit(values: FormValues) {
+    if (process.env.NEXT_PUBLIC_STATIC_HOST === "1") {
+      toast.error("GitHub Pages cannot run the research server. Clone the repo and start it with npm run dev.");
+      return;
+    }
     const channels = [values.telegram ? "telegram" : null, values.x ? "x" : null].filter((item): item is string => Boolean(item));
     if (!channels.length) {
       toast.error("Choose at least one channel.");
@@ -174,6 +178,12 @@ export function HomeClient() {
             Defaults: Ethereum mainnet, Telegram first, X second, USD, 48 hours before through 24 hours after. The category is detected from
             the site, not assumed.
           </p>
+          {process.env.NEXT_PUBLIC_STATIC_HOST === "1" ? (
+            <p className="mt-3 text-xs text-warning">
+              This GitHub Pages copy is the public interface. Analysis stays on the Node server, where facts are saved and missing data
+              stays missing.
+            </p>
+          ) : null}
         </form>
       </div>
       <ol className="mt-12 grid gap-3 md:grid-cols-3">

@@ -1,0 +1,21 @@
+1:"$Sreact.fragment"
+2:I[7435,["292","static/chunks/292-9ac9c18c5eb80ac6.js","527","static/chunks/527-198c8fc95a295710.js","177","static/chunks/app/layout-3612112b45c09a2f.js"],"Providers"]
+3:I[5643,[],""]
+4:I[7735,[],""]
+5:I[5838,["292","static/chunks/292-9ac9c18c5eb80ac6.js","100","static/chunks/100-37a0786f91d8de77.js","527","static/chunks/527-198c8fc95a295710.js","624","static/chunks/624-3bede34dcc60cea8.js","974","static/chunks/app/page-8f6c57b94f6b42d3.js"],"HomeClient"]
+6:I[6034,[],"OutletBoundary"]
+8:I[7895,[],"AsyncMetadataOutlet"]
+a:I[6034,[],"ViewportBoundary"]
+c:I[6034,[],"MetadataBoundary"]
+d:"$Sreact.suspense"
+f:I[6129,[],""]
+:HL["/TokenLaunchAI/_next/static/media/22a5144ee8d83bca-s.p.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/TokenLaunchAI/_next/static/media/7d4881bb7e1bf84d-s.p.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/TokenLaunchAI/_next/static/media/e6099e249fd938cc-s.p.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/TokenLaunchAI/_next/static/css/dbcf91e188fca28a.css","style"]
+0:{"P":null,"b":"L9KnCGXlWF6GEJMASOIHg","p":"/TokenLaunchAI","c":["",""],"i":false,"f":[[["",{"children":["__PAGE__",{}]},"$undefined","$undefined",true],["",["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/TokenLaunchAI/_next/static/css/dbcf91e188fca28a.css","precedence":"next","crossOrigin":"$undefined","nonce":"$undefined"}]],["$","html",null,{"lang":"en","children":["$","body",null,{"className":"__variable_5c0434 __variable_1225d1 __variable_3641c5 antialiased","children":["$","$L2",null,{"children":["$","$L3",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L4",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":404}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],[]],"forbidden":"$undefined","unauthorized":"$undefined"}]}]}]}]]}],{"children":["__PAGE__",["$","$1","c",{"children":[["$","$L5",null,{}],null,["$","$L6",null,{"children":["$L7",["$","$L8",null,{"promise":"$@9"}]]}]]}],{},null,false]},null,false],["$","$1","h",{"children":[null,[["$","$La",null,{"children":"$Lb"}],["$","meta",null,{"name":"next-size-adjust","content":""}]],["$","$Lc",null,{"children":["$","div",null,{"hidden":true,"children":["$","$d",null,{"fallback":null,"children":"$Le"}]}]}]]}],false]],"m":"$undefined","G":["$f",[]],"s":false,"S":true}
+b:[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]
+7:null
+10:I[5783,[],"IconMark"]
+9:{"metadata":[["$","title","0",{"children":"TokenLaunch AI"}],["$","meta","1",{"name":"description","content":"Research-driven Telegram marketing desk for Ethereum token launches."}],["$","link","2",{"rel":"icon","href":"/TokenLaunchAI/favicon.ico","type":"image/x-icon","sizes":"16x16"}],["$","$L10","3",{}]],"error":null,"digest":"$undefined"}
+e:"$9:metadata"
