@@ -1,4 +1,4 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 
 export type BotFact = { label: string; value: string | null; status: string; isPrivate?: boolean };
 

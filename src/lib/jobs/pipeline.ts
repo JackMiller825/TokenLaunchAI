@@ -15,7 +15,7 @@ import { verifyOnChain } from "../research/chain";
 import { crawlSite, tryPlaywright } from "../research/crawl";
 import { extractResearch, labelFor } from "../research/extract";
 import { inspectImage } from "../research/images";
-import { safeFetch } from "../research/http";
+import { safeFetch } from "../research/safe-fetch";
 import type { DraftFact } from "../research/types";
 
 class Cancelled extends Error {}

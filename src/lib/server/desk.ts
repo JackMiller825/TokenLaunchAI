@@ -7,7 +7,7 @@ import { assertRole, loadProject, type SessionUser } from "../auth";
 import { prisma } from "../db";
 import { env } from "../env";
 import { discoverChannels } from "../discovery/discover";
-import { safeFetch } from "../research/http";
+import { safeFetch } from "../research/safe-fetch";
 import { enqueueScan } from "../jobs/enqueue";
 import { defaultBudget, reoptimizeBudget, applyPercents } from "../marketing/budget";
 import { generateDraft } from "../marketing/copy";

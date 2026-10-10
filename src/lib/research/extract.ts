@@ -146,7 +146,8 @@ function extractHtml(doc: ResearchDocument) {
   const ogTitle = clean($('meta[property="og:title"]').attr("content") || "");
   const ogDescription = clean($('meta[property="og:description"]').attr("content") || "");
   const ogImage = abs(doc.url, $('meta[property="og:image"]').attr("content") || "");
-  const canonical = abs(doc.url, $('link[rel="canonical"]').attr("href") || "") || doc.url;
+  const canonicalHref = $('link[rel="canonical"]').attr("href") || "";
+  const canonical = canonicalHref ? abs(doc.url, canonicalHref) : "";
   const heading = clean($("h1").first().text());
   $("script,style,noscript").remove();
   const text = clean($("body").text());
@@ -193,7 +194,7 @@ function extractHtml(doc: ResearchDocument) {
   if (colors.length) add(seeds, "brand.colors", colors.join(", "), "REPORTED_UNVERIFIED", 0.4, doc.url, "css", colors.join(", "));
   const fonts = fontFamilies(doc.html);
   if (fonts.length) add(seeds, "brand.fonts", fonts.join(", "), "REPORTED_UNVERIFIED", 0.4, doc.url, "css", fonts.join(", "));
-  if (canonical) add(seeds, "identity.website", canonical, "VERIFIED", 0.9, doc.url, "canonical", canonical);
+  if (canonical && isSiteRoot(canonical)) add(seeds, "identity.website", canonical, "VERIFIED", 0.9, doc.url, "canonical", canonical);
   return { seeds, prose, assets, routes, injection };
 }
 
@@ -675,7 +676,24 @@ function mergeSeeds(seeds: Seed[]): DraftFact[] {
   for (const [fieldKey, group] of groups) {
     const present = group.filter((seed) => seed.value && seed.value.trim());
     const missing = group.filter((seed) => !seed.value);
-    const distinct = uniqueBy(present, (seed) => normalizeValue(seed.value || ""));
+    const distinct = uniqueBy(present, (seed) => compareValue(fieldKey, seed.value || ""));
+    if (fieldKey === "identity.description" && distinct.length > 1) {
+      const home = distinct.find((seed) => isSiteRoot(seed.sourceUrl)) || [...distinct].sort((a, b) => (a.value || "").length - (b.value || "").length)[0];
+      const others = distinct.filter((seed) => seed !== home);
+      facts.push({
+        fieldKey,
+        label: LABELS[fieldKey] ?? fieldKey,
+        value: home.value,
+        status: home.status,
+        confidence: round(home.confidence),
+        sourceUrl: home.sourceUrl,
+        sourceType: home.sourceType,
+        excerpt: home.excerpt,
+        conflictNotes: others.length ? `Other crawled pages use different descriptions: ${others.map((seed) => seed.value).join(" | ")}` : null,
+        evidence: group.map(toEvidence),
+      });
+      continue;
+    }
     if (distinct.length > 1) {
       const evidence = group.map(toEvidence);
       facts.push({
@@ -697,7 +715,8 @@ function mergeSeeds(seeds: Seed[]): DraftFact[] {
     }
     if (distinct.length === 1) {
       const best = [...present].sort((a, b) => b.confidence - a.confidence)[0];
-      const notes = unique(present.map((seed) => seed.conflictNotes || "").filter(Boolean));
+      let notes = unique(present.map((seed) => seed.conflictNotes || "").filter(Boolean));
+      if (best.status === "VERIFIED") notes = notes.filter((note) => !/does not mark this link as verified/i.test(note));
       if (missing.length && /not published|null/i.test(missing.map((seed) => seed.excerpt || "").join(" "))) {
         notes.push("Another source on the same site says this value is unpublished or empty.");
       }
@@ -1005,6 +1024,28 @@ function clipExcerpt(value: string) {
 
 function normalizeValue(value: string) {
   return value.trim().replace(/^\$/, "").replace(/\s+/g, " ").toLowerCase();
+}
+
+function compareValue(fieldKey: string, value: string) {
+  if (fieldKey === "identity.website") {
+    try {
+      const url = new URL(value);
+      const path = url.pathname === "/" ? "" : url.pathname.replace(/\/$/, "");
+      return `${url.protocol}//${url.host}${path}`.toLowerCase();
+    } catch {
+      return normalizeValue(value).replace(/\/$/, "");
+    }
+  }
+  return normalizeValue(value);
+}
+
+function isSiteRoot(value: string) {
+  try {
+    const url = new URL(value);
+    return url.pathname === "/" || url.pathname === "";
+  } catch {
+    return false;
+  }
 }
 
 function unique(values: string[]) {

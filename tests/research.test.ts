@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { extractResearch, findConfigWindow } from "../src/lib/research/extract";
-import { safeFetch } from "../src/lib/research/http";
+import { safeFetch } from "../src/lib/research/safe-fetch";
 import { robotsAllows } from "../src/lib/research/robots";
 import { isBlockedIp, resolvePublicAddresses } from "../src/lib/research/ssrf";
 import type { ResearchDocument } from "../src/lib/research/types";
@@ -88,6 +88,28 @@ describe("extraction", () => {
     expect(liquidity?.status).not.toBe("VERIFIED");
     expect(pack.facts.find((fact) => fact.fieldKey === "social.telegram")?.value).toContain("t.me/medalnerd");
     expect(pack.facts.find((fact) => fact.fieldKey === "identity.disclaimer")?.value?.toLowerCase()).toContain("fictional");
+  });
+
+  it("keeps the homepage description when inner pages differ", () => {
+    const home: ResearchDocument = {
+      url: "https://medal.example/",
+      statusCode: 200,
+      renderedWith: "http",
+      html: `<html><head><title>MedalNerd ($NERD) — Big medal.</title><link rel="canonical" href="https://medal.example/"/><meta name="description" content="An independent Ethereum meme project."></head><body><p>Total supply 100.</p></body></html>`,
+    };
+    const token: ResearchDocument = {
+      url: "https://medal.example/token",
+      statusCode: 200,
+      renderedWith: "http",
+      html: `<html><head><link rel="canonical" href="https://medal.example/token"/><meta name="description" content="Token page details for supply and tax."></head><body><p>Total supply 100.</p></body></html>`,
+    };
+    const pack = extractResearch([home, token], "https://medal.example/");
+    const description = pack.facts.find((fact) => fact.fieldKey === "identity.description");
+    const website = pack.facts.find((fact) => fact.fieldKey === "identity.website");
+    expect(description?.value).toBe("An independent Ethereum meme project.");
+    expect(description?.status).not.toBe("CONFLICTING");
+    expect(website?.status).not.toBe("CONFLICTING");
+    expect(website?.value).toBe("https://medal.example/");
   });
 
   it("marks conflicting supply and collapses duplicate names", () => {

@@ -1,5 +1,5 @@
 import { load } from "cheerio";
-import { decodeBody, safeFetch, type SafeFetchOptions } from "./http";
+import { decodeBody, safeFetch, type SafeFetchOptions } from "./safe-fetch";
 import { imageRole } from "./images";
 import { robotsAllows } from "./robots";
 import { normalizeHttpUrl, sameSite } from "./ssrf";
@@ -257,7 +257,7 @@ export async function tryPlaywright(url: string) {
   if (process.env.PLAYWRIGHT_ENABLED !== "1") return null;
   const specifier = "playwright";
   try {
-    const loaded = (await import(specifier)) as {
+    const loaded = (await import(/* webpackIgnore: true */ specifier)) as {
       chromium?: {
         launch: (opts: { headless: boolean }) => Promise<{
           newContext: () => Promise<{

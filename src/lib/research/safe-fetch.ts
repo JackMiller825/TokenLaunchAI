@@ -1,6 +1,6 @@
-import http from "node:http";
-import https from "node:https";
-import { isIP } from "node:net";
+import http from "http";
+import https from "https";
+import { isIP } from "net";
 import { ResearchError, normalizeHttpUrl, resolvePublicAddresses, type ResolveFn } from "./ssrf";
 
 export const RESEARCH_UA = "TokenLaunchAIResearch/1.0 (+local research crawler; public pages only)";

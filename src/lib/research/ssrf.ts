@@ -1,5 +1,5 @@
-import { lookup } from "node:dns/promises";
-import { isIP } from "node:net";
+import { lookup } from "dns/promises";
+import { isIP } from "net";
 
 export class ResearchError extends Error {
   constructor(
