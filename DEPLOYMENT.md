@@ -35,9 +35,9 @@ npm run worker
 
 ## GitHub Pages
 
-The repository remote for public source is `https://github.com/JackMiller825/TokenLaunchAI.git`. Every update should be pushed there. `npm run build:pages` writes the static interface to `docs/`. GitHub Pages serves that folder from `main` at `https://jackmiller825.github.io/TokenLaunchAI/`.
+The repository remote for public source is `https://github.com/JackMiller825/TokenLaunchAI.git`. Every update should be pushed there. `npm run build:pages` writes the static interface to `docs/`. GitHub Pages serves that folder from `main` at [https://tokenlaunchai.site/](https://tokenlaunchai.site/).
 
-The site uses the `/TokenLaunchAI` base path. It does not crawl websites or store projects. Pages is configured with branch `main` and folder `/docs`, because the current GitHub login can push the site but cannot push Actions workflow files. `.github/workflows/pages.yml` is ready for when the token includes the `workflow` scope.
+The custom domain is the site root, so the static export uses an empty base path. It does not crawl websites or store projects. Pages uses branch `main` and folder `/docs`, because the current GitHub login can push the site but cannot push Actions workflow files. `.github/workflows/pages.yml` is ready for when the token includes the `workflow` scope.
 
 ## Vercel
 

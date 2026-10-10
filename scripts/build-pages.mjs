@@ -46,7 +46,7 @@ const result = spawnSync("npx", ["next", "build"], {
   env: {
     ...process.env,
     PAGES_EXPORT: "1",
-    PAGES_BASE_PATH: process.env.PAGES_BASE_PATH || "/TokenLaunchAI",
+    PAGES_BASE_PATH: process.env.PAGES_BASE_PATH ?? "",
     NEXT_PUBLIC_STATIC_HOST: "1",
   },
 });

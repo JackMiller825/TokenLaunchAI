@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const pages = process.env.PAGES_EXPORT === "1";
-const basePath = pages ? process.env.PAGES_BASE_PATH || "/TokenLaunchAI" : "";
+const basePath = pages ? (process.env.PAGES_BASE_PATH ?? "") : "";
 
 const nextConfig: NextConfig = pages
   ? {

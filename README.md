@@ -80,7 +80,7 @@ Leave a key empty and the related screen says the provider is not connected. The
 
 ## GitHub
 
-Source updates also go to [JackMiller825/TokenLaunchAI](https://github.com/JackMiller825/TokenLaunchAI). The static interface in `docs/` is what GitHub Pages serves at `https://jackmiller825.github.io/TokenLaunchAI/`. Rebuild it with `npm run build:pages` before pushing. `.github/workflows/pages.yml` can publish that build automatically once the GitHub token includes the `workflow` scope.
+Source updates also go to [JackMiller825/TokenLaunchAI](https://github.com/JackMiller825/TokenLaunchAI). The static interface in `docs/` is what GitHub Pages serves at [https://tokenlaunchai.site/](https://tokenlaunchai.site/). Rebuild it with `npm run build:pages` before pushing. `.github/workflows/pages.yml` can publish that build automatically once the GitHub token includes the `workflow` scope.
 
 GitHub Pages cannot run the research server, Postgres, Redis, or Telegram webhooks. The published site is the launch screen and a notice on the desk routes. Analysis, saved projects, and approvals stay on `npm run dev` or a Node host.
 
