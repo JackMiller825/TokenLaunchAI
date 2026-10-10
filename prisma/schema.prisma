@@ -1,0 +1,688 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  MARKETING
+  ANALYST
+  VIEWER
+}
+
+enum FactStatus {
+  VERIFIED
+  REPORTED_UNVERIFIED
+  MISSING
+  CONFLICTING
+  NEEDS_CONFIRMATION
+}
+
+enum JobStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum OpportunityStatus {
+  DISCOVERED
+  RESEARCHING
+  CONTACTED
+  QUOTED
+  APPROVED
+  BOOKED
+  PUBLISHED
+  REVIEWED
+}
+
+enum TaskStatus {
+  DRAFT
+  READY
+  PENDING_APPROVAL
+  APPROVED
+  SCHEDULED
+  PUBLISHED
+  FAILED
+  CANCELLED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum MetricKind {
+  MEASURED
+  IMPORTED
+  ESTIMATED
+  UNAVAILABLE
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  memberships  Membership[]
+  comments     Comment[]
+  requested    ApprovalRequest[] @relation("ApprovalRequester")
+  decided      ApprovalRequest[] @relation("ApprovalDecider")
+  auditLogs    AuditLog[]
+}
+
+model Organization {
+  id            String         @id @default(cuid())
+  name          String
+  timezone      String         @default("UTC")
+  currency      String         @default("USD")
+  retentionDays Int            @default(365)
+  rankWeights   Json?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  members       Membership[]
+  projects      Project[]
+  auditLogs     AuditLog[]
+  notifications Notification[]
+  secrets       IntegrationSecret[]
+}
+
+model Membership {
+  id             String       @id @default(cuid())
+  organizationId String
+  userId         String
+  role           Role
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+}
+
+model Project {
+  id                   String                 @id @default(cuid())
+  organizationId       String
+  name                 String
+  websiteUrl           String?
+  blockchain           String                 @default("Ethereum mainnet")
+  category             String?
+  launchAt             DateTime?
+  budgetUsd            Decimal                @default(0) @db.Decimal(12, 2)
+  currency             String                 @default("USD")
+  timezone             String                 @default("UTC")
+  durationHoursBefore  Int                    @default(48)
+  durationHoursAfter   Int                    @default(24)
+  audiences            String[]               @default([])
+  languages            String[]               @default(["en"])
+  countries            String[]               @default([])
+  channels             String[]               @default(["telegram", "x"])
+  objectives           String?
+  telegramTarget       String?
+  budgetPlan           Json?
+  faq                  Json?
+  status               String                 @default("draft")
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  organization         Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  websites             ProjectWebsite[]
+  scans                WebsiteScan[]
+  facts                ExtractedFact[]
+  profile              TokenProfile?
+  socials              SocialAccount[]
+  communities          Community[]
+  opportunities        AdvertisingOpportunity[]
+  strategies           MarketingStrategy[]
+  intelligence         IntelligenceReport[]
+  campaigns            Campaign[]
+  tasks                CampaignTask[]
+  placements           CampaignPlacement[]
+  metrics              CampaignMetric[]
+  assets               CreativeAsset[]
+  drafts               ContentDraft[]
+  approvals            ApprovalRequest[]
+  jobs                 ScheduledJob[]
+  telegram             TelegramIntegration?
+  subscribers          TelegramSubscriber[]
+  readiness            LaunchReadinessItem[]
+  reports              GeneratedReport[]
+  comments             Comment[]
+  notifications        Notification[]
+
+  @@index([organizationId, updatedAt])
+}
+
+model ProjectWebsite {
+  id           String        @id @default(cuid())
+  projectId    String
+  inputUrl     String
+  canonicalUrl String?
+  domain       String?
+  createdAt    DateTime      @default(now())
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  scans        WebsiteScan[]
+
+  @@index([projectId])
+}
+
+model WebsiteScan {
+  id              String        @id @default(cuid())
+  projectId       String
+  websiteId       String?
+  url             String
+  status          JobStatus     @default(QUEUED)
+  progress        Int           @default(0)
+  stage           String?
+  stageLabel      String?
+  error           String?
+  cancelRequested Boolean       @default(false)
+  heartbeatAt     DateTime?
+  startedAt       DateTime?
+  finishedAt      DateTime?
+  summary         Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  project         Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  website         ProjectWebsite? @relation(fields: [websiteId], references: [id], onDelete: SetNull)
+  pages           CrawledPage[]
+  facts           ExtractedFact[]
+
+  @@index([projectId, createdAt])
+  @@index([status, heartbeatAt])
+}
+
+model CrawledPage {
+  id           String      @id @default(cuid())
+  scanId       String
+  url          String
+  statusCode   Int?
+  title        String?
+  contentType  String?
+  bytes        Int?
+  textExcerpt  String?
+  renderedWith String?
+  error        String?
+  fetchedAt    DateTime    @default(now())
+  scan         WebsiteScan @relation(fields: [scanId], references: [id], onDelete: Cascade)
+
+  @@index([scanId])
+}
+
+model ExtractedFact {
+  id            String         @id @default(cuid())
+  projectId     String
+  scanId        String?
+  fieldKey      String
+  label         String
+  value         String?
+  originalValue String?
+  status        FactStatus
+  confidence    Float
+  sourceUrl     String?
+  sourceType    String?
+  retrievedAt   DateTime?
+  excerpt       String?
+  conflictNotes String?
+  userValue     String?
+  accepted      Boolean        @default(false)
+  isPrivate     Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  project       Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  scan          WebsiteScan?   @relation(fields: [scanId], references: [id], onDelete: SetNull)
+  evidence      FactEvidence[]
+
+  @@index([projectId, fieldKey])
+  @@index([scanId])
+}
+
+model FactEvidence {
+  id          String        @id @default(cuid())
+  factId      String
+  sourceUrl   String
+  sourceType  String
+  excerpt     String?
+  retrievedAt DateTime      @default(now())
+  fact        ExtractedFact @relation(fields: [factId], references: [id], onDelete: Cascade)
+
+  @@index([factId])
+}
+
+model TokenProfile {
+  id                   String   @id @default(cuid())
+  projectId            String   @unique
+  name                 String?
+  ticker               String?
+  blockchain           String?
+  tagline              String?
+  description          String?
+  narrative            String?
+  category             String?
+  theme                String?
+  contractAddress      String?
+  tokenStandard        String?
+  totalSupply          String?
+  circulatingSupply    String?
+  decimals             String?
+  buyTax               String?
+  sellTax              String?
+  teamAllocation       String?
+  communityAllocation  String?
+  liquidityAllocation  String?
+  treasuryAllocation   String?
+  liquidityStatus      String?
+  ownershipStatus      String?
+  launchStatus         String?
+  logoUrl              String?
+  mascotUrl            String?
+  updatedAt            DateTime @updatedAt
+  project              Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model SocialAccount {
+  id         String     @id @default(cuid())
+  projectId  String
+  platform   String
+  handle     String?
+  url        String
+  status     FactStatus
+  followers  Int?
+  sourceUrl  String?
+  notes      String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  project    Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, platform])
+}
+
+model Community {
+  id                String   @id @default(cuid())
+  projectId         String
+  kind              String
+  name              String?
+  url               String
+  memberCount       Int?
+  memberCountStatus String?
+  notes             String?
+  createdAt         DateTime @default(now())
+  project           Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model AdvertisingOpportunity {
+  id               String            @id @default(cuid())
+  projectId        String
+  name             String
+  telegramUrl      String?
+  username         String?
+  category         String?
+  language         String?
+  subscribers      Int?
+  subscriberSource String?
+  averageViews     Int?
+  viewsSource      String?
+  engagement       Decimal?          @db.Decimal(8, 4)
+  contact          String?
+  priceUsd         Decimal?          @db.Decimal(12, 2)
+  priceSource      String?
+  cpmUsd           Decimal?          @db.Decimal(12, 4)
+  relevance        Float?
+  relevanceNotes   String?
+  freshness        DateTime?
+  riskFlags        String[]          @default([])
+  recommendation   String?
+  rankScore        Float?
+  rankConfidence   Float?
+  rankExplanation  String?
+  status           OpportunityStatus @default(DISCOVERED)
+  sourceLabel      String
+  sourceUrl        String?
+  saved            Boolean           @default(false)
+  proofUrl         String?
+  publishedAt      DateTime?
+  notes            String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  project          Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  quotes           SponsorshipQuote[]
+
+  @@index([projectId, status])
+  @@index([projectId, rankScore])
+}
+
+model SponsorshipQuote {
+  id            String                   @id @default(cuid())
+  opportunityId String
+  priceUsd      Decimal?                 @db.Decimal(12, 2)
+  currency      String                   @default("USD")
+  contact       String?
+  notes         String?
+  validUntil    DateTime?
+  createdAt     DateTime                 @default(now())
+  opportunity   AdvertisingOpportunity   @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  @@index([opportunityId])
+}
+
+model MarketingStrategy {
+  id        String   @id @default(cuid())
+  projectId String
+  version   Int
+  generator String
+  model     String?
+  content   Json
+  warnings  String[] @default([])
+  createdAt DateTime @default(now())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, version])
+}
+
+model IntelligenceReport {
+  id        String   @id @default(cuid())
+  projectId String
+  version   Int
+  generator String
+  model     String?
+  content   Json
+  createdAt DateTime @default(now())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, version])
+}
+
+model Campaign {
+  id        String              @id @default(cuid())
+  projectId String
+  name      String
+  objective String?
+  status    String              @default("draft")
+  budgetUsd Decimal             @default(0) @db.Decimal(12, 2)
+  startsAt  DateTime?
+  endsAt    DateTime?
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  project   Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks     CampaignTask[]
+  placements CampaignPlacement[]
+  metrics   CampaignMetric[]
+
+  @@index([projectId])
+}
+
+model CampaignTask {
+  id          String     @id @default(cuid())
+  campaignId  String
+  projectId   String
+  name        String
+  description String?
+  owner       String?
+  dueAt       DateTime?
+  channel     String?
+  budgetUsd   Decimal?   @db.Decimal(12, 2)
+  assetLabel  String?
+  message     String?
+  status      TaskStatus @default(DRAFT)
+  result      String?
+  dependsOnId String?
+  publishedAt DateTime?
+  sortOrder   Int        @default(0)
+  reusable    Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  campaign    Campaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, dueAt])
+  @@index([campaignId])
+}
+
+model CampaignPlacement {
+  id            String            @id @default(cuid())
+  campaignId    String
+  projectId     String
+  opportunityId String?
+  name          String
+  channel       String
+  status        OpportunityStatus @default(DISCOVERED)
+  priceUsd      Decimal?          @db.Decimal(12, 2)
+  proofUrl      String?
+  publishedAt   DateTime?
+  notes         String?
+  createdAt     DateTime          @default(now())
+  campaign      Campaign          @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  project       Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model CampaignMetric {
+  id          String     @id @default(cuid())
+  projectId   String
+  campaignId  String?
+  placementId String?
+  name        String
+  value       Decimal?   @db.Decimal(18, 4)
+  unit        String
+  kind        MetricKind
+  recordedAt  DateTime
+  source      String
+  notes       String?
+  createdAt   DateTime   @default(now())
+  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  campaign    Campaign?  @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, recordedAt])
+}
+
+model CreativeAsset {
+  id           String   @id @default(cuid())
+  projectId    String
+  role         String
+  sourceUrl    String?
+  previewUrl   String?
+  width        Int?
+  height       Int?
+  mimeType     String?
+  bytes        Int?
+  usage        String?
+  availability String
+  qualityNotes String?
+  approved     Boolean  @default(false)
+  prompt       String?
+  filename     String?
+  createdAt    DateTime @default(now())
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model ContentDraft {
+  id         String   @id @default(cuid())
+  projectId  String
+  kind       String
+  tone       String
+  language   String   @default("en")
+  title      String
+  body       String
+  charCount  Int
+  warnings   String[] @default([])
+  footnotes  String[] @default([])
+  generator  String
+  status     String   @default("draft")
+  campaignId String?
+  taskId     String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, kind])
+}
+
+model ApprovalRequest {
+  id           String         @id @default(cuid())
+  projectId    String
+  type         String
+  status       ApprovalStatus @default(PENDING)
+  title        String
+  detail       String?
+  targetType   String?
+  targetId     String?
+  requesterId  String
+  deciderId    String?
+  decisionNote String?
+  createdAt    DateTime       @default(now())
+  decidedAt    DateTime?
+  project      Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  requester    User           @relation("ApprovalRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  decider      User?          @relation("ApprovalDecider", fields: [deciderId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, status])
+}
+
+model ScheduledJob {
+  id        String    @id @default(cuid())
+  projectId String?
+  type      String
+  status    JobStatus @default(QUEUED)
+  runAt     DateTime  @default(now())
+  payload   Json
+  attempts  Int       @default(0)
+  lastError String?
+  lockedAt  DateTime?
+  dedupeKey String?   @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  project   Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([status, runAt])
+}
+
+model TelegramIntegration {
+  id            String    @id @default(cuid())
+  projectId     String    @unique
+  botUsername   String?
+  channelId     String?
+  groupId       String?
+  webhookSecret String?
+  status        String
+  lastError     String?
+  connectedAt   DateTime?
+  updatedAt     DateTime  @updatedAt
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model TelegramSubscriber {
+  id             String    @id @default(cuid())
+  projectId      String
+  telegramUserId String
+  username       String?
+  optedIn        Boolean   @default(false)
+  optedInAt      DateTime?
+  optedOutAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  project        Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, telegramUserId])
+  @@index([projectId, optedIn])
+}
+
+model LaunchReadinessItem {
+  id        String   @id @default(cuid())
+  projectId String
+  category  String
+  key       String
+  label     String
+  status    String
+  auto      Boolean  @default(true)
+  owner     String?
+  notes     String?
+  updatedAt DateTime @updatedAt
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, key])
+  @@index([projectId, category])
+}
+
+model AuditLog {
+  id             String       @id @default(cuid())
+  organizationId String
+  projectId      String?
+  userId         String?
+  action         String
+  detail         String?
+  metadata       Json?
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([projectId, createdAt])
+}
+
+model GeneratedReport {
+  id        String   @id @default(cuid())
+  projectId String
+  kind      String
+  format    String
+  title     String
+  content   String?
+  createdAt DateTime @default(now())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt])
+}
+
+model Comment {
+  id         String   @id @default(cuid())
+  projectId  String
+  userId     String?
+  targetType String
+  targetId   String
+  body       String
+  createdAt  DateTime @default(now())
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, createdAt])
+}
+
+model Notification {
+  id             String       @id @default(cuid())
+  organizationId String
+  projectId      String?
+  title          String
+  body           String
+  href           String?
+  readAt         DateTime?
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project        Project?     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+}
+
+model IntegrationSecret {
+  id             String       @id @default(cuid())
+  organizationId String
+  provider       String
+  status         String
+  lastCheckedAt  DateTime?
+  lastError      String?
+  ciphertext     String?
+  meta           Json?
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, provider])
+}
